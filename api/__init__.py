@@ -1,15 +1,15 @@
 from flask import Blueprint
 from flask.views import MethodView
 
-from api.views import HomeAPI, UserRegistration, UserLogin, create_task, get_tasks, specific_task
+from api.views import create_task, get_tasks, HomeAPI, specific_task, UserRegistration, UserLogin
 from api.views import mark_completed, update_task, delete_task, UserLogout
 
 bp = Blueprint(
-    'home', __name__, url_prefix="/"
+    'api', __name__, url_prefix='/todo'
 )
 
 bp.add_url_rule(
-    "",
+    "/",
     view_func=HomeAPI.as_view('index'),
     methods=["GET"]
 )
