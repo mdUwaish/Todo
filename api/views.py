@@ -67,14 +67,17 @@ class UserLogin(MethodView):
 class UserLogout(MethodView):
     @jwt_required()
     def post(self):
-        return make_response({'message':'User logged out successfully!'}), 200
+        if get_jwt_identity():
+            return make_response({'message':'User logged out successfully!'}), 200
+        else:
+            return make_response({'message':'User not logged in!'}), 401
 
 
 class create_task(MethodView):
     @jwt_required()
     def post(self):
         data = request.get_json()
-        user_id = data.get('user_id')
+        user_id = get_jwt_identity()  # get the user id from the jwt token
         title = data.get('title')
         description = data.get('description')
         try:
@@ -82,7 +85,7 @@ class create_task(MethodView):
         except ValueError as e:
             return make_response({'message':'Invalid date format!'}), 400
 
-        status = data.get('status')
+        status = data.get('status', False)
 
         new_task = Task(user_id=user_id, title=title, description=description, due_date=due_date, status=status)
         save_to_db(new_task)
@@ -101,8 +104,11 @@ class create_task(MethodView):
     
 class get_tasks(MethodView):
     @jwt_required()
-    def get(self, user_id):
+    def get(self):
+        user_id = get_jwt_identity()
         tasks = Task.query.filter_by(user_id=user_id).all()
+        if tasks == []:
+            return make_response({'message':'No tasks found!'}), 404
         task_list = []
         for task in tasks:
             task_list.append({
@@ -118,7 +124,12 @@ class get_tasks(MethodView):
 class specific_task(MethodView):
     @jwt_required()
     def get(self, task_id):
+        user_id = get_jwt_identity()
         task=Task.query.get(task_id)
+
+        if not task or task.user_id != user_id:
+            return make_response({'message':'Task not found or User not logged in!'}), 404
+        
         return make_response({
             'id':task_id,
             'title':task.title,
@@ -131,7 +142,12 @@ class specific_task(MethodView):
 class update_task(MethodView):
     @jwt_required()
     def put(self, task_id):
+        user_id = get_jwt_identity()
         task = Task.query.get(task_id)
+
+        if not task or task.user_id != user_id:
+            return make_response({'message':'Task not found or User not logged in!'}), 404
+        
         data = request.get_json()
         task.title = data.get('title')
         task.description = data.get('description')
@@ -145,7 +161,10 @@ class update_task(MethodView):
 class delete_task(MethodView):
     @jwt_required()
     def delete(self, task_id):
+        user_id = get_jwt_identity()
         task = Task.query.get(task_id)
+        if not task or task.user_id != user_id:
+            return make_response({'message':'Task not found or User not logged in!'}), 404
         db.session.delete(task)
         db.session.commit()
 
@@ -155,7 +174,10 @@ class delete_task(MethodView):
 class mark_completed(MethodView):
     @jwt_required()
     def put(self, task_id):
+        user_id = get_jwt_identity()
         task = Task.query.get(task_id)
+        if not task or task.user_id != user_id:
+            return make_response({'message':'Task not found or User not logged in!'}), 404  
         task.status = True
         db.session.commit()
 

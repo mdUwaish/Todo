@@ -15,19 +15,19 @@ bp.add_url_rule(
 )
 
 bp.add_url_rule(
-    "/user/register",
+    "/api/user/register",
     view_func=UserRegistration.as_view('UserRegistration'),
     methods=["POST",]
 )
 
 bp.add_url_rule(
-    "/user/login",
+    "/api/user/login",
     view_func=UserLogin.as_view('UserLogin'),
     methods=["POST", ]
 )
 
 bp.add_url_rule(
-    "/user/logout",
+    "/api/user/logout",
     view_func=UserLogout.as_view('UserLogout'),
     methods=["POST", ]
 )
